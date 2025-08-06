@@ -27,7 +27,7 @@ def open_and_read_md_files(md_path: str) -> list[dict]:
                                 "text": text})
     return pages_and_texts
 
-path = "C:\\Users\\syedw\\Desktop\\WelcomeToUniGirlie\\WorkWorkWork\\DM_AI_25\\DM-i-AI-2025\\emergency-healthcare-rag\\data\\topics\\Brain Death\\Brain Death.md"
+path = "C:\\Users\\syedw\\Desktop\\WelcomeToUniGirlie\\WorkWorkWork\\rag-model-dm-2025\\rag-model-dm-2025\\data\\topics\\Brain Death\\Brain Death.md"
 
 pages_and_texts = open_and_read_md_files(md_path=path)
 
@@ -62,14 +62,10 @@ for item in tqdm(pages_and_texts):
     
 num_sentence_chunk_size = 10
 
-# Create a function to split lists of tects recursivelt into our chosen chunk size
-#
-def split_list(input_list: list, slice_size: int = num_sentence_chunk_size) -> list[list[str]]:
+# Create a function to split lists of tects recursively into our chosen chunk size
+
+def split_list(input_list: list, slice_size: int) -> list[list[str]]:
     return[input_list[i:i+slice_size] for i in range(0,len(input_list), slice_size)]
-
-test_list = list(range(25))
-
-split_list(test_list)
 
 
 # Loop through pages and texts and split sentences into chunks
@@ -77,10 +73,9 @@ split_list(test_list)
 for item in tqdm(pages_and_texts):
     item["sentence_chunks"] = split_list(input_list=item["sentences"], slice_size=num_sentence_chunk_size)
     item["num_chunks"] = len(item["sentence_chunks"])
-    
 
-df = pd.DataFrame(pages_and_texts)
-df.describe().round(2)
+
+
 
 
 """We would like to embed each cuhnk of sentences into its own numerical representation
@@ -114,7 +109,9 @@ print(random.sample(pages_and_chunks, k=4))
 
 # We want a minimum threshold for random chunks, so we filter those with too short chunks 
 
+df = pd.DataFrame(pages_and_chunks)
+df.describe().round(2)
+
 min_token_length = 30
 for row in df[df["chunk_token_count"] <= min_token_length].sample(5).iterrows():
-    print("Chunk token count: {row[1]["chunk_token_count"]} | Text: {row[1]["sentences_chunk"]} ")
- 
+    print(f'Chunk token count: {row[1]["chunk_token_count"]} | Text: {row[1]["sentence_chunk"]}')
