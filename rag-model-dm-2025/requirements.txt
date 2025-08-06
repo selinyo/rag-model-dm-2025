@@ -4,3 +4,7 @@ pydantic
 pydantic-settings
 loguru
 openai
+transformers
+torch
+sentence-transformers
+llama-index-embeddings-huggingface
