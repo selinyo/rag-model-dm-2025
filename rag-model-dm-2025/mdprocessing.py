@@ -57,7 +57,7 @@ pages_and_texts = open_and_read_md_files(md_path=path)
 import pandas as pd
 
 df = pd.DataFrame(pages_and_texts)
-df.head()
+print(df.head())
 
 
 for item in tqdm(pages_and_texts):
@@ -136,15 +136,25 @@ from sentence_transformers import SentenceTransformer
 embedding_model = SentenceTransformer(model_name_or_path="Qwen/Qwen3-Embedding-0.6B")
 
 # Send the model to the GPU NAHH ITS CPU ONLY IN THIS HOUSE I GOTA CUDA GPU AND I STILL CANNOT RUN THIS SHIT?!
-embedding_model.to("cpu") 
+embedding_model.to("cuda") 
 
 # Create embeddings one by one on the GPU
-embedding_file = []
 for item in tqdm(pages_and_chunks_over_min_token_len):
     item["embedding"] = embedding_model.encode(item["sentence_chunk"])
-    embedding_file.append(item)
     
+text_chunks = [item["sentence_chunk"] for item in pages_and_chunks_over_min_token_len]
 
-import numpy as np
+text_chunk_embeddings = embedding_model.encode(text_chunks,
+                                               batch_size=32, # you can use different batch sizes here for speed/performance, I found 32 works well for this use case
+                                               convert_to_tensor=True) # optional to return embeddings as tensor instead of array
 
-np.save('embeddings.npy', embedding_file)
+text_chunks_and_embeddings_df = pd.DataFrame(pages_and_chunks_over_min_token_len)
+
+embeddings_df_save_path = "text_chunks_and_embeddings_df.csv"
+
+text_chunks_and_embeddings_df.to_csv(embeddings_df_save_path, index=False)
+
+text_chunks_and_embedding_df_load = pd.read_csv(embeddings_df_save_path)
+
+text_chunks_and_embedding_df_load.head()
+print(text_chunks_and_embedding_df_load.head())

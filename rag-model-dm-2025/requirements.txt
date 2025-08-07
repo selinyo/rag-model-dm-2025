@@ -8,7 +8,9 @@ pandas
 tqdm
 spacy
 transformers
-torch
+torch --index-url https://download.pytorch.org/whl/cu129
+torchvision --index-url https://download.pytorch.org/whl/cu129
+torchaudio
 sentence-transformers
 llama-index-embeddings-huggingface
 hf_xet
