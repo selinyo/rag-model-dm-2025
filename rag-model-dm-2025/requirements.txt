@@ -7,8 +7,8 @@ openai
 pandas
 tqdm
 spacy
-
 transformers
 torch
 sentence-transformers
 llama-index-embeddings-huggingface
+hf_xet

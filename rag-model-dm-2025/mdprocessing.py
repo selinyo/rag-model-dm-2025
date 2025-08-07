@@ -1,33 +1,55 @@
 import os
 import random;
+import spacy;
+import en_core_web_sm;
 from tqdm.auto import tqdm;
 
+nlp = spacy.load("en_core_web_sm")
 
+nlp = en_core_web_sm.load()
+
+path = "rag-model-dm-2025/data/topics/"
+
+pages_and_texts = [] 
 
 def text_formatter(text: str) -> str:
     """Perform minor formatting on text."""
-    cleaned_text = text.replace("\n", " ").strip()
-    
+    cleaned_text = text.replace("\n", " ")
+    cleaned_text = cleaned_text.replace("\n\n", " ").strip()
     return cleaned_text
     # More can be developed here later
+    
 
 def open_and_read_md_files(md_path: str) -> list[dict]:
-    with open(md_path, 'r', encoding='utf-8') as file:
-        read_text = file.read()  
-    pages_and_texts = [] 
-    
-    for text_section in tqdm(read_text.split(".")):
-        text = text_section
-        text = text_formatter(text=text)
-        pages_and_texts.append({
-                                "text_section_char_count": len(text),
-                                "text_section_word_count":len(text.split(" ")),
-                                "text_section_sentence_count_raw": len(text.split(".")),
-                                "text_section_token_count": len(text) / 4,
-                                "text": text})
+    path = "rag-model-dm-2025/data/topics/"
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if name.endswith((".md")):
+                filepath = os.path.join(root,name)
+                with open(filepath, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    if "Continuing Education Activity" in content:
+                        intro_removed = content.split("Continuing Education Activity")
+                    else: 
+                        intro_removed = content.split("Introduction")
+                    if "## Review Questions" in content:
+                        reference_removed = intro_removed[1].split("## Review Questions")
+                    else:
+                        reference_removed =  intro_removed[1].split("## References")
+                    
+                    doc = nlp(reference_removed[0])
+                   
+                    for text_section in tqdm(doc.sents, desc=f"{name}"):
+                        text = str(text_section)
+                        text = text_formatter(text=text)
+                        pages_and_texts.append({
+                                                "text_section_char_count": len(text),
+                                                "text_section_word_count":len(text.split(" ")),
+                                                "text_section_sentence_count_raw": len(text.split(".")),
+                                                "text_section_token_count": len(text) / 4,
+                                                "text": text})
     return pages_and_texts
 
-path = "C:\\Users\\syedw\\Desktop\\WelcomeToUniGirlie\\WorkWorkWork\\rag-model-dm-2025\\rag-model-dm-2025\\data\\topics\\Brain Death\\Brain Death.md"
 
 pages_and_texts = open_and_read_md_files(md_path=path)
 
@@ -37,16 +59,6 @@ import pandas as pd
 df = pd.DataFrame(pages_and_texts)
 df.head()
 
-from spacy.lang.en import English
-
-nlp = English()
-
-nlp.add_pipe("sentencizer")
-
-doc = nlp("This is a sentence. This is another sentence. I like an Elephant or multiples of elephants. Something something")
-
-assert len(list(doc.sents)) == 4
-print(list(doc.sents))
 
 for item in tqdm(pages_and_texts):
     item["sentences"] = list(nlp(item["text"]).sents)
@@ -101,17 +113,38 @@ for item in tqdm(pages_and_texts):
         
         pages_and_chunks.append(chunk_dict)
 
-print(len(pages_and_chunks))
 
-
-
-print(random.sample(pages_and_chunks, k=4))
 
 # We want a minimum threshold for random chunks, so we filter those with too short chunks 
 
 df = pd.DataFrame(pages_and_chunks)
-df.describe().round(2)
 
-min_token_length = 30
-for row in df[df["chunk_token_count"] <= min_token_length].sample(5).iterrows():
-    print(f'Chunk token count: {row[1]["chunk_token_count"]} | Text: {row[1]["sentence_chunk"]}')
+
+min_token_length = 8
+
+
+pages_and_chunks_over_min_token_len = df[df["chunk_token_count"] > min_token_length].to_dict(orient="records")
+
+
+
+    
+### Embedding our text chunks with embedding models
+
+
+from sentence_transformers import SentenceTransformer
+
+embedding_model = SentenceTransformer(model_name_or_path="Qwen/Qwen3-Embedding-0.6B")
+
+# Send the model to the GPU NAHH ITS CPU ONLY IN THIS HOUSE I GOTA CUDA GPU AND I STILL CANNOT RUN THIS SHIT?!
+embedding_model.to("cpu") 
+
+# Create embeddings one by one on the GPU
+embedding_file = []
+for item in tqdm(pages_and_chunks_over_min_token_len):
+    item["embedding"] = embedding_model.encode(item["sentence_chunk"])
+    embedding_file.append(item)
+    
+
+import numpy as np
+
+np.save('embeddings.npy', embedding_file)
