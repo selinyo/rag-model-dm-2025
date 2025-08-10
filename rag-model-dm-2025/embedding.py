@@ -1,3 +1,4 @@
+import os
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -9,6 +10,7 @@ embedding_model = HuggingFaceEmbedding(
 #    device='cuda'
 )
 
+"""
 def embed_topics(topic_path: str, embedded_topics_path: str) -> None:
     with open(topic_path, 'r') as file1:
         topics = json.load(file1)
@@ -20,7 +22,20 @@ def embed_topics(topic_path: str, embedded_topics_path: str) -> None:
         json_str = json.dumps(embedded_topics, indent=4)
         file2.write(json_str)
         file2.close()
-        
+      
+"""
+def embed_topics(text,text2):
+    return
+output_json_path = "rag-model-dm-2025/data/embedded_topics.json"
+
+print(os.path.exists(output_json_path))
+
+if os.path.exists(output_json_path):
+    print("This file exists")
+else:
+    embed_topics(topic_path="rag-model-dm-2025/data/topics.json",embedded_topics_path="rag-model-dm-2025/data/embedded_topics.json")
+    
+    
 def match_topic_to_query(query: str, embedded_topics_path: str) -> str:
     query = query.lower().strip()
     embedded_query = embedding_model.get_text_embedding(query)
@@ -40,8 +55,7 @@ def match_topic_to_query(query: str, embedded_topics_path: str) -> str:
     return matched_topic
 
 print("hei")
-embed_topics("C:/Users/selin/Documents/annet/hackaton/rag-model-dm-2025/rag-model-dm-2025/data/topics.json", "C:/Users/selin/Documents/annet/hackaton/rag-model-dm-2025/rag-model-dm-2025/data/embedded_topics.json")
-match_topic_to_query("Subtotal cholecystectomy may be performed when severe pericholecystic inflammation makes safe dissection of Calot's triangle impossible, though this approach is rarely necessary in empyema cases.", "C:/Users/selin/Documents/annet/hackaton/rag-model-dm-2025/rag-model-dm-2025/data/embedded_topics.json")
+match_topic_to_query("Subtotal cholecystectomy may be performed when severe pericholecystic inflammation makes safe dissection of Calot's triangle impossible, though this approach is rarely necessary in empyema cases. Or not???", "C:/Users/syedw/Desktop/WelcomeToUniGirlie/WorkWorkWork/rag-model-dm-2025/text_chunks_and_embeddings(1).json")
 print("hadet, funket det ikke?")
 
 # for x in range(0, 200):
