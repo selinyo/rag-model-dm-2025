@@ -66,9 +66,10 @@ def open_and_read_md_files(md_path: str) -> list[dict]:
                                                 "text_section_char_count": len(clean_text),
                                                 "text_section_word_count":len(clean_text.split(" ")),
                                                 "text_section_sentence_count_raw": len(clean_text.split(".")),
-                                                "text_section_token_count": len(clean_text) / 4, #Why four, cause its perfection
+                                                "text_section_token_count": len(clean_text) / 4, #Why four, cause its perfection get it a League of Legends joke please...
                                                 "text": clean_text,
-                                                "sentence_chunks": text})
+                                                "sentence_chunks": text,#"unique_id" should have been added as well, since we now have no way to differentiate the different documents aside from the embedding itself, this is heavy on memory and load when it comes to processing and retrieving relevant documents. 
+                                                })
     
     return pages_and_texts
 
@@ -112,9 +113,9 @@ text_chunks = [item["text"] for item in pages_and_chunks_over_min_token_len]
 
 text_chunk_embeddings = embedding_model.encode(
     text_chunks,
-    batch_size=16, #I CANT HANDLE MORE :SOB_EMOJI:
+    batch_size=16, #I CANT HANDLE MORE :SOB_EMOJI: my 1660 is a good girl, but she is not the best girl
     show_progress_bar=True,
-    convert_to_tensor=False 
+    convert_to_tensor=False  #In mathematics, a tensor is an algebraic object that describes a multilinear relationship between sets of algebraic objects associated with a vector space. A-ah haaji... Totally got that ustad-ji... 
 )
 
 # Attach embeddings to each item and convert to list for JSON serialization
@@ -122,10 +123,11 @@ for item, emb in zip(pages_and_chunks_over_min_token_len, text_chunk_embeddings)
     # Convert the embedding to a list and attach it
     item["embedding"] = emb.tolist()  # Embedding as a list so we don't truncate data like last time and start crying when the model breaks.
 
-# Now save the entire data (texts + embeddings) to a JSON file, cause again I refuse to lose this file.
+# Now save the entire data (texts + embeddings) to a JSON file, cause again I refuse to lose this file due to csv formatting doodoo logic
 output_json_path = "text_chunks_with_embeddings.json"
 
 # Simple write function
 with open(output_json_path, "w", encoding="utf-8") as json_file:
     json.dump(pages_and_chunks_over_min_token_len, json_file, ensure_ascii=False, indent=2)
 
+print("FULLY PROCESSSED DOCUMENTS AND EMBEDDED THEM")
